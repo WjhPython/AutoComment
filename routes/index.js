@@ -17,7 +17,7 @@ router.get('/', async (ctx, next) => {
   }
 
   await ctx.render('task-new', {
-      title: '济南点量软件', cookie: data
+      title: '君君科技', cookie: data
   });
 })
 
