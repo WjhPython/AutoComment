@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<header>
+    <%include header.ejs %>
+</header>
+<body class="top-navigation">
+    <div id="wrapper">
+        <div id="page-wrapper" class="gray-bg">
+            <%include top.ejs %>
+            <div class="wrapper wrapper-content">
+                <div class="container">
+                    <div class="row">
+                            <div class="col-lg-12">
+                                <div class="ibox float-e-margins">
+                                    <div class="ibox-title">
+                                        <h5>添加任务</h5>
+                                        <div class="ibox-tools">
+                                            <a class="collapse-link">
+                                                <i class="fa fa-chevron-up"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="ibox-content">
+                                        <form id="form" class="form-horizontal">
+                                            <div class="form-group"><label class="col-sm-2 control-label">商品地址</label>
+                                                <div class="col-sm-9"><input type="text" id="start_url" name="start_url" class="form-control" placeholder="http://"></div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group" id="add_cookie">
+                                                <% if (cookie){ %>
+                                                    <div class="cookie-grant-input">
+                                                            <label class="col-sm-2 control-label">cookie</label>
+                                                            <div class="col-sm-9"><input type="text" id="login_cookie" value='<%= cookie[0] %>' name="login_cookie" class="form-control" placeholder="Cookie:">&nbsp;</div>
+                                                            <br /><br />
+                                                        </div>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                    <% for(var i in cookie){%>
+                                                        <% if (i !=0) {%>
+                                                        <div class="cookie-grant-input">
+                                                                <label class="col-sm-2 control-label"></label>
+                                                                <div class="col-sm-9"><input type="text" id="login_cookie" value='<%= cookie[i] %>' name="login_cookie" class="form-control" placeholder="Cookie:">&nbsp;</div><a class="btn btn-danger btn-sm live-remove-grant" onclick="removeCookieGrant(this)"><i class="fa fa-remove"></i></a>
+                                                            </div>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                        <% } %>
+                                                    <% } %>
+                                                <% } else{ %>
+                                                    <div class="cookie-grant-input">
+                                                        <label class="col-sm-2 control-label">cookie</label>
+                                                        <div class="col-sm-9"><input type="text" id="login_cookie" name="login_cookie" class="form-control" placeholder="Cookie:">&nbsp;</div>
+                                                        <br /><br />
+                                                    </div>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                <% } %>
+                                            </div>
+                                            <div class="col-sm-4 col-sm-offset-2">
+                                                <a class="btn btn-primary" id="add_button" onclick="addCookieGrant(this)">+</a>
+                                            </div>
+                                            </br>
+                                            <div class="hr-line-dashed"></div>
+                                            
+                                            <div class="form-group"><label class="col-sm-2 control-label">评论</label>
+                                                <div class="col-sm-9"><input type="text" id="comments" name="comments" class="form-control" placeholder="评论"></div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <div class="col-sm-4 col-sm-offset-2">
+                                                    <a class="btn btn-primary" id="button_submit">添加</a>
+                                                </div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group"><label class="col-sm-2 control-label">进度</label><label id="pageInfo" class="col-sm-2 control-label">1/1页</label></div>
+                                            <div class="progress progress-striped">
+                                                <div id="progress-bar" class="progress-bar progress-bar-success" role="progressbar"
+                                                     aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"
+                                                     style="width: 0%;">
+                                                    <span class="sr-only">40% 完成</span>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                
+                </div>
+            </div>
+            <%include bottom.ejs%>
+        </div>
+    </div>
+    <%include footer.ejs%>
+
+<script>
+
+toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "progressBar": false,
+            "preventDuplicates": false,
+            "positionClass": "toast-top-center",
+            "onclick": null,
+            "showDuration": "400",
+            "hideDuration": "1000",
+            "timeOut": "3000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+$(document).ready(function(){
+    $("#form").validate({
+        rules: {
+            start_urls: {
+                required: true,
+                url2: true
+            }
+        }
+    });
+
+    // 重写serializeObject函数
+    $.fn.serializeObject = function()
+    {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+            if (o[this.name]) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+
+    function GetUrlRelativePath()
+　　{
+　　　　var url = document.location.toString();
+　　　　var arrUrl = url.split("//");
+
+　　　　var start = arrUrl[1].indexOf("/");
+　　　　var relUrl = arrUrl[1].substring(start);//stop省略，截取从start开始到结尾的所有字符
+
+　　　　if(relUrl.indexOf("?") != -1){
+　　　　　　relUrl = relUrl.split("?")[0];
+　　　　}
+　　　　return relUrl;
+　　}
+
+    function getQueryString(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) return unescape(r[2]); return null;
+    }
+    $("#button_submit").click(function(){
+        var start_url = $("#start_url").val();
+        var login_cookie = $("#login_cookie").val();
+        var comments = $("#comments").val();
+        
+        // var params = {
+        //     start_url: start_url,
+        //     login_cookie: login_cookie,
+        //     comments: comments
+        // }
+        var params = $("#form").serializeObject();
+
+        console.log(params);
+
+        $.ajax({
+            type: "POST",
+            url: "/task-new",
+            data: params,
+            success: function(result){
+                try {
+                    if (result.code == 200 && result.message == "success"){
+                        toastr.success("任务已经添加成功！");
+                        // 查看自动评论进度条
+                        console.log("开始发送长链接请求");
+                        longPolling();
+                    }
+                } catch (error) {
+                    toastr.success("任务添加失败！");
+                }
+            },
+            error: function(result){
+                toastr.success("任务添加失败！");
+            } 
+        });
+    })
+});
+// 长链接
+// 链接次数
+var count = 1;
+var longPolling = function(){
+    console.log("统计进度条")
+    console.log("链接次数=>"+count);
+    $.ajax({
+        url: "/task-progress",
+        type: "GET",
+        timeout: 30,//设置为20s后断开连接
+        error: function (XMLHttpRequest, textStatus, errorThrown) {//请求失败
+            //如果返回错误，根据错误信息进行相应的处理
+            //再次发起长连接
+            setTimeout(longPolling, 10000)
+            count ++;
+        },
+        success: function (data) {//请求成功
+            //根据后台返回的数据对页面数据进行刷新
+            var flag = refresh(data);
+            if (flag == true){
+                //刷新成功后发起新的长连接请求
+                setTimeout(longPolling, 10000)
+
+                count ++;
+            }
+        }
+    });
+};
+
+var refresh = function(data){
+    if (data.code != 200){
+        return false;
+    }
+    try {
+        if (data.dataPool.urls){
+            if (data.dataPool.len == 0){
+                setTimeout(5000);
+                return true
+            }
+            if (data.dataPool.parentPage >= data.dataPool.num){
+                toastr.success("任务完成！");
+                $("#progress-bar").css("width","100%");
+                $("#pageInfo").html(data.dataPool.num+"/"+data.dataPool.num+"页");
+                return false;
+            }
+        }
+        var present = ((data.dataPool.urls.length/data.dataPool.len)*100).toFixed(2);
+        $("#progress-bar").css("width", present+"%");
+        $("#pageInfo").html(data.dataPool.parentPage+"/"+data.dataPool.num+"页");
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+// cookie删除function
+var removeCookieGrant = function (obj) {
+    $ (obj).parent ().remove ();
+  };
+
+// cookie增加function
+var addCookieGrant = function (obj) {
+    var input = '<div class="cookie-grant-input"><label class="col-sm-2 control-label"></label><div class="col-sm-9"><input type="text" id="login_cookie" name="login_cookie" class="form-control" placeholder="Cookie:">&nbsp;</div><a class="btn btn-danger btn-sm live-remove-grant" onclick="removeCookieGrant(this)"><i class="fa fa-remove"></i></a></div>&nbsp;&nbsp;&nbsp;&nbsp;'
+    $('#add_cookie').append(input);
+};
+</script>
+</body>
+
+</html>

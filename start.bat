@@ -1,0 +1,1 @@
+node .\bin\www -p 3000
